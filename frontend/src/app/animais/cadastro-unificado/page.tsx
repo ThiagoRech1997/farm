@@ -143,7 +143,10 @@ export default function CadastroUnificadoPage() {
   };
 
   const animaisMachos = animais.filter(animal => animal.Sexo?.toLowerCase() === 'm' || animal.Sexo?.toLowerCase() === 'macho');
-  const animaisFemeas = animais.filter(animal => animal.Sexo?.toLowerCase() === 'f' || animal.Sexo?.toLowerCase() === 'femea');
+  const animaisFemeas = animais.filter(animal => {
+    const sexoSemAcento = (animal.Sexo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return sexoSemAcento === 'f' || sexoSemAcento === 'femea';
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 p-4">

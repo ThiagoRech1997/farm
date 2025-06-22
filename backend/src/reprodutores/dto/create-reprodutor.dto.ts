@@ -6,7 +6,7 @@ import {
   IsDateString,
 } from 'class-validator';
 
-export class CreateReprodutoreDto {
+export class CreateReprodutorDto {
   @IsString()
   @IsNotEmpty()
   Nome: string;

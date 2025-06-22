@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { CreateReprodutoreDto } from './dto/create-reprodutore.dto';
-import { UpdateReprodutoreDto } from './dto/update-reprodutore.dto';
+import { CreateReprodutorDto } from './dto/create-reprodutor.dto';
+import { UpdateReprodutorDto } from './dto/update-reprodutor.dto';
 import { DATABASE_CONNECTION } from 'src/database/database.module';
 import { Database } from 'sqlite3';
 
@@ -8,7 +8,7 @@ import { Database } from 'sqlite3';
 export class ReprodutoresService {
   constructor(@Inject(DATABASE_CONNECTION) private readonly db: Database) {}
 
-  create(createReprodutoreDto: CreateReprodutoreDto) {
+  create(createReprodutorDto: CreateReprodutorDto) {
     const {
       Nome,
       Matriz_ID,
@@ -16,7 +16,7 @@ export class ReprodutoresService {
       Data_Nascimento,
       Ninhada_Descricao,
       Perdas,
-    } = createReprodutoreDto;
+    } = createReprodutorDto;
     return new Promise((resolve, reject) => {
       this.db.run(
         'INSERT INTO Reprodutores (Nome, Matriz_ID, Data_Concepcao, Data_Nascimento, Ninhada_Descricao, Perdas) VALUES (?, ?, ?, ?, ?, ?)',
@@ -32,7 +32,7 @@ export class ReprodutoresService {
           if (err) {
             return reject(err);
           }
-          resolve({ id: this.lastID, ...createReprodutoreDto });
+          resolve({ id: this.lastID, ...createReprodutorDto });
         },
       );
     });
@@ -60,9 +60,9 @@ export class ReprodutoresService {
     });
   }
 
-  update(id: number, updateReprodutoreDto: UpdateReprodutoreDto) {
-    const fields = Object.keys(updateReprodutoreDto);
-    const values = Object.values(updateReprodutoreDto);
+  update(id: number, updateReprodutorDto: UpdateReprodutorDto) {
+    const fields = Object.keys(updateReprodutorDto);
+    const values = Object.values(updateReprodutorDto);
 
     if (fields.length === 0) {
       return this.findOne(id);

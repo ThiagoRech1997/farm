@@ -37,4 +37,16 @@ describe('AppController (e2e)', () => {
       expect(pesagem).toHaveProperty('Animal_Nome');
     }
   });
+
+  it('/reprodutores (GET)', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/reprodutores')
+      .expect(200);
+    expect(Array.isArray(response.body)).toBe(true);
+    if (response.body.length > 0) {
+      const reprodutor = response.body[0];
+      expect(reprodutor).toHaveProperty('ID');
+      expect(reprodutor).toHaveProperty('Nome');
+    }
+  });
 });
