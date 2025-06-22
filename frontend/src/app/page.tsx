@@ -7,6 +7,8 @@ import Particles from '../components/Particles';
 import { SkeletonGrid, StatsSkeleton } from '../components/LoadingSkeleton';
 import Modal from '../components/Modal';
 import { useToast } from '../hooks/useToast';
+import ResumoCard from '../components/ResumoCard';
+import AlertCard from '../components/AlertCard';
 
 type Animal = {
   ID: number;
@@ -216,48 +218,63 @@ export default function Home() {
               {loading ? (
                 <StatsSkeleton />
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                  <div className="glass p-6 rounded-2xl shadow-lg border-l-4 border-green-800 text-center card-glow hover-3d">
-                    <span className="text-4xl font-bold text-green-800 block count-up">{animais.length}</span>
-                    <div className="text-gray-600 text-lg mt-2">Total de Animais</div>
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <ResumoCard titulo="Total de Animais" valor={animais.length} icone={<span>🐄</span>} cor="border-green-800" />
+                    <ResumoCard titulo="Machos" valor={animaisMachos.length} icone={<span>♂️</span>} cor="border-blue-800" />
+                    <ResumoCard titulo="Fêmeas" valor={animaisFemeas.length} icone={<span>♀️</span>} cor="border-pink-800" />
+                    <ResumoCard titulo="Não Definido" valor={animais.filter(a => !a.Sexo).length} icone={<span>❓</span>} cor="border-purple-800" />
                   </div>
-                  <div className="glass p-6 rounded-2xl shadow-lg border-l-4 border-blue-800 text-center card-glow hover-3d">
-                    <span className="text-4xl font-bold text-blue-800 block count-up">{animaisMachos.length}</span>
-                    <div className="text-gray-600 text-lg mt-2">Machos</div>
+                  {/* Seção de Alertas e Pendências */}
+                  <div className="mb-8">
+                    <h2 className="text-2xl font-bold text-yellow-700 mb-4 flex items-center gap-2"><span>⚠️</span> Alertas e Pendências</h2>
+                    <AlertCard
+                      icone={<span>💉</span>}
+                      titulo="Vacinas Pendentes"
+                      descricao={`Existem ${vacinas.filter(v => new Date(v.Proxima_Aplicacao) < new Date()).length} vacinas atrasadas ou próximas do vencimento.`}
+                      cor="border-yellow-500"
+                    />
+                    <AlertCard
+                      icone={<span>⚖️</span>}
+                      titulo="Pesagens Atrasadas"
+                      descricao={`Existem ${pesagens.filter(p => {
+                        const dias = (new Date().getTime() - new Date(p.Data_Pesagem).getTime()) / (1000*60*60*24);
+                        return dias > 30;
+                      }).length} animais sem pesagem há mais de 30 dias.`}
+                      cor="border-orange-500"
+                    />
+                    <AlertCard
+                      icone={<span>☠️</span>}
+                      titulo="Perdas Recentes"
+                      descricao={`Verifique as últimas perdas registradas nas ninhadas.`}
+                      cor="border-red-500"
+                    />
                   </div>
-                  <div className="glass p-6 rounded-2xl shadow-lg border-l-4 border-pink-800 text-center card-glow hover-3d">
-                    <span className="text-4xl font-bold text-pink-800 block count-up">{animaisFemeas.length}</span>
-                    <div className="text-gray-600 text-lg mt-2">Femeas</div>
+                  {/* Seção de Ações Rápidas */}
+                  <div className="flex flex-wrap gap-4 mb-8 justify-center">
+                    <Link href="/animais/cadastro-unificado">
+                      <button className="bg-gradient-to-r from-green-600 to-green-700 text-white font-bold py-4 px-8 rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 transform hover:-translate-y-1 shadow-lg btn-hover animate-shimmer flex items-center gap-2">
+                        <span className="text-2xl">➕</span> Cadastrar Animal Completo
+                      </button>
+                    </Link>
+                    <Link href="/animais/novo">
+                      <button className="bg-gradient-to-r from-blue-500 to-blue-700 text-white font-bold py-4 px-8 rounded-xl hover:from-blue-600 hover:to-blue-800 transition-all duration-300 transform hover:-translate-y-1 shadow-lg btn-hover flex items-center gap-2">
+                        <span className="text-2xl">➕</span> Cadastrar Animal Simples
+                      </button>
+                    </Link>
+                    <Link href="/pesagens/novo">
+                      <button className="bg-gradient-to-r from-lime-600 to-lime-700 text-white font-bold py-4 px-8 rounded-xl hover:from-lime-700 hover:to-lime-800 transition-all duration-300 transform hover:-translate-y-1 shadow-lg btn-hover flex items-center gap-2">
+                        <span className="text-2xl">⚖️</span> Registrar Pesagem
+                      </button>
+                    </Link>
+                    <Link href="/vacinas/novo">
+                      <button className="bg-gradient-to-r from-pink-500 to-pink-700 text-white font-bold py-4 px-8 rounded-xl hover:from-pink-600 hover:to-pink-800 transition-all duration-300 transform hover:-translate-y-1 shadow-lg btn-hover flex items-center gap-2">
+                        <span className="text-2xl">💉</span> Registrar Vacina
+                      </button>
+                    </Link>
                   </div>
-                  <div className="glass p-6 rounded-2xl shadow-lg border-l-4 border-purple-800 text-center card-glow hover-3d">
-                    <span className="text-4xl font-bold text-purple-800 block count-up">{animais.filter(a => !a.Sexo).length}</span>
-                    <div className="text-gray-600 text-lg mt-2">Nao Definido</div>
-                  </div>
-                </div>
+                </>
               )}
-
-              <div className="flex flex-wrap gap-4 mb-8">
-                <Link href="/animais/cadastro-unificado">
-                  <button className="bg-gradient-to-r from-green-600 to-green-700 text-white font-bold py-4 px-8 rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 transform hover:-translate-y-1 shadow-lg btn-hover animate-shimmer">
-                    ➕ Cadastrar Animal Completo
-                  </button>
-                </Link>
-                <Link href="/animais/novo">
-                  <button className="bg-white/20 text-white border-2 border-white/50 font-bold py-4 px-8 rounded-xl hover:bg-white/30 transition-all duration-300 transform hover:-translate-y-1 shadow-lg btn-hover">
-                    ➕ Cadastrar Animal Simples
-                  </button>
-                </Link>
-                <Link href="/pesagens">
-                  <button className="bg-white/20 text-white border-2 border-white/50 font-bold py-4 px-8 rounded-xl hover:bg-white/30 transition-all duration-300 transform hover:-translate-y-1 shadow-lg btn-hover">
-                    ⚖️ Gerenciar Pesagens
-                  </button>
-                </Link>
-                <Link href="/vacinas">
-                  <button className="bg-white/20 text-white border-2 border-white/50 font-bold py-4 px-8 rounded-xl hover:bg-white/30 transition-all duration-300 transform hover:-translate-y-1 shadow-lg btn-hover">
-                    💉 Gerenciar Vacinas
-                  </button>
-                </Link>
-              </div>
 
               <div className="mb-8 search-container">
                 <div className="relative">
