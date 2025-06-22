@@ -1,6 +1,8 @@
+'use client';
+
 import { useState, useCallback } from 'react';
 
-interface ToastMessage {
+export interface ToastMessage {
   id: number;
   message: string;
   type: 'success' | 'error' | 'warning' | 'info';
@@ -15,7 +17,7 @@ export const useToast = () => {
     type: 'success' | 'error' | 'warning' | 'info' = 'info',
     duration: number = 3000
   ) => {
-    const id = Date.now();
+    const id = Date.now() + Math.random();
     setToasts(prev => [...prev, { id, message, type, duration }]);
   }, []);
 

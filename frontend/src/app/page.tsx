@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Toast from '../components/Toast';
 import Particles from '../components/Particles';
 import { SkeletonGrid, StatsSkeleton } from '../components/LoadingSkeleton';
+import { useToast } from '../hooks/useToast';
 
 type Animal = {
   ID: number;
@@ -17,19 +18,13 @@ type Animal = {
   Raca_Nome?: string;
 };
 
-interface ToastMessage {
-  id: number;
-  message: string;
-  type: 'success' | 'error' | 'warning' | 'info';
-}
-
 export default function Home() {
   const [animais, setAnimais] = useState<Animal[]>([]);
   const [activeTab, setActiveTab] = useState('animais');
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [showParticles, setShowParticles] = useState(true);
+  const { toasts, removeToast, success, error, info, warning } = useToast();
 
   useEffect(() => {
     fetchAnimais();
@@ -47,23 +42,14 @@ export default function Home() {
       if (res.ok) {
         const data = await res.json();
         setAnimais(data);
-        addToast('Animais carregados com sucesso!', 'success');
+        success('Animais carregados com sucesso!');
       }
-    } catch (error) {
-      console.error('Erro ao buscar animais:', error);
-      addToast('Erro ao carregar animais', 'error');
+    } catch (err) {
+      console.error('Erro ao buscar animais:', err);
+      error('Erro ao carregar animais');
     } finally {
       setLoading(false);
     }
-  };
-
-  const addToast = (message: string, type: 'success' | 'error' | 'warning' | 'info') => {
-    const id = Date.now();
-    setToasts(prev => [...prev, { id, message, type }]);
-  };
-
-  const removeToast = (id: number) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
   };
 
   const animaisMachos = animais.filter(animal => animal.Sexo?.toLowerCase() === 'm' || animal.Sexo?.toLowerCase() === 'macho');
@@ -194,40 +180,40 @@ export default function Home() {
                       style={{ animationDelay: `${index * 0.1}s` }}
                     >
                       <h3 className="text-xl font-bold text-green-800 mb-4">{animal.Nome}</h3>
-                      <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div className="grid grid-cols-2 gap-3 mb-4 text-gray-700">
                         <span className="bg-white bg-opacity-80 px-3 py-2 rounded-lg text-sm font-medium">
-                          <strong>Cor:</strong> {animal.Cor || 'N/A'}
+                          <strong className="text-gray-900">Cor:</strong> {animal.Cor || 'N/A'}
                         </span>
                         <span className="bg-white bg-opacity-80 px-3 py-2 rounded-lg text-sm font-medium">
-                          <strong>Sexo:</strong> {animal.Sexo || 'N/A'}
+                          <strong className="text-gray-900">Sexo:</strong> {animal.Sexo || 'N/A'}
                         </span>
                         <span className="bg-white bg-opacity-80 px-3 py-2 rounded-lg text-sm font-medium">
-                          <strong>Nascimento:</strong> {animal.Data_Nascimento ? new Date(animal.Data_Nascimento).toLocaleDateString('pt-BR') : 'N/A'}
+                          <strong className="text-gray-900">Nascimento:</strong> {animal.Data_Nascimento ? new Date(animal.Data_Nascimento).toLocaleDateString('pt-BR') : 'N/A'}
                         </span>
                         <span className="bg-white bg-opacity-80 px-3 py-2 rounded-lg text-sm font-medium">
-                          <strong>ID:</strong> #{animal.ID}
+                          <strong className="text-gray-900">ID:</strong> #{animal.ID}
                         </span>
                         {animal.Especie_Nome && (
                           <span className="bg-white bg-opacity-80 px-3 py-2 rounded-lg text-sm font-medium">
-                            <strong>Espécie:</strong> {animal.Especie_Nome}
+                            <strong className="text-gray-900">Espécie:</strong> {animal.Especie_Nome}
                           </span>
                         )}
                         {animal.Raca_Nome && (
                           <span className="bg-white bg-opacity-80 px-3 py-2 rounded-lg text-sm font-medium">
-                            <strong>Raça:</strong> {animal.Raca_Nome}
+                            <strong className="text-gray-900">Raça:</strong> {animal.Raca_Nome}
                           </span>
                         )}
                       </div>
                       <div className="flex gap-2">
                         <button 
                           className="flex-1 bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-200 text-sm btn-hover"
-                          onClick={() => addToast('Funcionalidade de edição em desenvolvimento', 'info')}
+                          onClick={() => info('Funcionalidade de edição em desenvolvimento')}
                         >
                           Editar
                         </button>
                         <button 
                           className="flex-1 bg-red-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600 transition duration-200 text-sm btn-hover"
-                          onClick={() => addToast('Funcionalidade de exclusão em desenvolvimento', 'warning')}
+                          onClick={() => warning('Funcionalidade de exclusão em desenvolvimento')}
                         >
                           Excluir
                         </button>
@@ -303,6 +289,7 @@ export default function Home() {
           key={toast.id}
           message={toast.message}
           type={toast.type}
+          duration={toast.duration}
           onClose={() => removeToast(toast.id)}
         />
       ))}
