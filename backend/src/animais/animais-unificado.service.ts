@@ -1,0 +1,182 @@
+import { Inject, Injectable, BadRequestException } from '@nestjs/common';
+import { DATABASE_CONNECTION } from 'src/database/database.module';
+import { Database } from 'sqlite3';
+import { CreateAnimalUnificadoDto } from './dto/create-animal-unificado.dto';
+
+@Injectable()
+export class AnimaisUnificadoService {
+  constructor(
+    @Inject(DATABASE_CONNECTION) private readonly db: Database,
+  ) {}
+
+  async createAnimalUnificado(createAnimalUnificadoDto: CreateAnimalUnificadoDto) {
+    const {
+      Nome,
+      Cor,
+      Sexo,
+      Data_Nascimento,
+      Observacoes,
+      PesoInicial,
+      DataPesagem,
+      Animal_Pai_ID,
+      Animal_Mae_ID
+    } = createAnimalUnificadoDto;
+
+    return new Promise((resolve, reject) => {
+      // Inicia uma transação
+      this.db.serialize(() => {
+        this.db.run('BEGIN TRANSACTION');
+
+        let animalId: number;
+
+        // 1. Cria o registro na tabela Animais
+        const insertAnimal = this.db.prepare(
+          'INSERT INTO Animais (Nome, Cor, Sexo, Data_Nascimento, Observacoes) VALUES (?, ?, ?, ?, ?)'
+        );
+        
+        insertAnimal.run([Nome, Cor, Sexo, Data_Nascimento, Observacoes], (err) => {
+          if (err) {
+            this.db.run('ROLLBACK');
+            return reject(new BadRequestException('Erro ao criar animal: ' + err.message));
+          }
+          
+          animalId = (insertAnimal as any).lastID;
+
+          // 2. Cria o registro de peso inicial
+          const dataPesagem = DataPesagem || new Date().toISOString().split('T')[0];
+          const insertPesagem = this.db.prepare(
+            'INSERT INTO Pesagens (Animal_ID, Data_Pesagem, Peso) VALUES (?, ?, ?)'
+          );
+
+          insertPesagem.run([animalId, dataPesagem, PesoInicial], (err) => {
+            if (err) {
+              this.db.run('ROLLBACK');
+              return reject(new BadRequestException('Erro ao registrar peso inicial: ' + err.message));
+            }
+
+            // 3. Cria os relacionamentos se os pais foram especificados
+            const relacionamentosPromises: Promise<any>[] = [];
+
+            if (Animal_Pai_ID) {
+              relacionamentosPromises.push(
+                new Promise((resolveRel, rejectRel) => {
+                  const insertRelPai = this.db.prepare(
+                    'INSERT INTO Relacionamentos (Animal_Pai_ID, Animal_Mae_ID, Filhote_ID, Tipo_Relacao) VALUES (?, ?, ?, ?)'
+                  );
+                  insertRelPai.run([Animal_Pai_ID, Animal_Mae_ID || null, animalId, 'Pai-Filho'], (err) => {
+                    if (err) {
+                      rejectRel(err);
+                    } else {
+                      resolveRel(true);
+                    }
+                  });
+                })
+              );
+            }
+
+            if (Animal_Mae_ID) {
+              relacionamentosPromises.push(
+                new Promise((resolveRel, rejectRel) => {
+                  const insertRelMae = this.db.prepare(
+                    'INSERT INTO Relacionamentos (Animal_Pai_ID, Animal_Mae_ID, Filhote_ID, Tipo_Relacao) VALUES (?, ?, ?, ?)'
+                  );
+                  insertRelMae.run([Animal_Pai_ID || null, Animal_Mae_ID, animalId, 'Mãe-Filho'], (err) => {
+                    if (err) {
+                      rejectRel(err);
+                    } else {
+                      resolveRel(true);
+                    }
+                  });
+                })
+              );
+            }
+
+            // Aguarda todos os relacionamentos serem criados
+            Promise.all(relacionamentosPromises)
+              .then(() => {
+                this.db.run('COMMIT');
+                resolve({
+                  success: true,
+                  animalId,
+                  message: 'Animal cadastrado com sucesso com peso inicial e relacionamentos'
+                });
+              })
+              .catch((error) => {
+                this.db.run('ROLLBACK');
+                reject(new BadRequestException('Erro ao criar relacionamentos: ' + error.message));
+              });
+          });
+        });
+
+        insertAnimal.finalize();
+      });
+    });
+  }
+
+  // Método para buscar animais para seleção como pais
+  async findAnimaisParaPais() {
+    return new Promise((resolve, reject) => {
+      this.db.all(
+        'SELECT ID, Nome, Sexo, Data_Nascimento FROM Animais ORDER BY Nome',
+        (err, rows) => {
+          if (err) {
+            return reject(err);
+          }
+          resolve(rows);
+        }
+      );
+    });
+  }
+
+  // Método para buscar um animal com todas as suas informações relacionadas
+  async findAnimalCompleto(id: number) {
+    return new Promise((resolve, reject) => {
+      this.db.get(
+        `SELECT 
+          a.*,
+          p.Peso as PesoAtual,
+          p.Data_Pesagem as UltimaPesagem
+        FROM Animais a
+        LEFT JOIN (
+          SELECT Animal_ID, Peso, Data_Pesagem
+          FROM Pesagens 
+          WHERE ID = (
+            SELECT MAX(ID) FROM Pesagens WHERE Animal_ID = a.ID
+          )
+        ) p ON a.ID = p.Animal_ID
+        WHERE a.ID = ?`,
+        [id],
+        (err, animal) => {
+          if (err) {
+            return reject(err);
+          }
+          if (!animal) {
+            return reject(new BadRequestException('Animal não encontrado'));
+          }
+
+          // Busca os relacionamentos
+          this.db.all(
+            `SELECT 
+              r.*,
+              pai.Nome as NomePai,
+              mae.Nome as NomeMae
+            FROM Relacionamentos r
+            LEFT JOIN Animais pai ON r.Animal_Pai_ID = pai.ID
+            LEFT JOIN Animais mae ON r.Animal_Mae_ID = mae.ID
+            WHERE r.Filhote_ID = ?`,
+            [id],
+            (err, relacionamentos) => {
+              if (err) {
+                return reject(err);
+              }
+              resolve({
+                ...animal,
+                relacionamentos
+              });
+            }
+          );
+        }
+      );
+    });
+  }
+} 
