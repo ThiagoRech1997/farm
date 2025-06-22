@@ -1,40 +1,55 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { AnimaisService } from './animais.service';
-import { CreateAnimaiDto } from './dto/create-animai.dto';
-import { UpdateAnimaiDto } from './dto/update-animai.dto';
-import { CreateSaidaAnimalDto } from './dto/create-saida-animal.dto';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Inject } from '@nestjs/common';
+import { CreateAnimalUseCase } from './application/create-animal.usecase';
+import { ListAnimalsUseCase } from './application/list-animals.usecase';
+import { GetAnimalUseCase } from './application/get-animal.usecase';
+import { UpdateAnimalUseCase } from './application/update-animal.usecase';
+import { RemoveAnimalUseCase } from './application/remove-animal.usecase';
+import { RegistrarSaidaAnimalUseCase } from './application/registrar-saida-animal.usecase';
 
 @Controller('animais')
 export class AnimaisController {
-  constructor(private readonly animaisService: AnimaisService) {}
+  constructor(
+    @Inject(CreateAnimalUseCase)
+    private readonly createAnimalUseCase: CreateAnimalUseCase,
+    @Inject(ListAnimalsUseCase)
+    private readonly listAnimalsUseCase: ListAnimalsUseCase,
+    @Inject(GetAnimalUseCase)
+    private readonly getAnimalUseCase: GetAnimalUseCase,
+    @Inject(UpdateAnimalUseCase)
+    private readonly updateAnimalUseCase: UpdateAnimalUseCase,
+    @Inject(RemoveAnimalUseCase)
+    private readonly removeAnimalUseCase: RemoveAnimalUseCase,
+    @Inject(RegistrarSaidaAnimalUseCase)
+    private readonly registrarSaidaAnimalUseCase: RegistrarSaidaAnimalUseCase,
+  ) {}
 
   @Post()
-  create(@Body() createAnimaiDto: CreateAnimaiDto) {
-    return this.animaisService.create(createAnimaiDto);
+  async create(@Body() dto: any) {
+    return this.createAnimalUseCase.execute(dto);
   }
 
   @Get()
-  findAll() {
-    return this.animaisService.findAll();
+  async findAll() {
+    return this.listAnimalsUseCase.execute();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.animaisService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    return this.getAnimalUseCase.execute(Number(id));
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAnimaiDto: UpdateAnimaiDto) {
-    return this.animaisService.update(+id, updateAnimaiDto);
+  async update(@Param('id') id: string, @Body() dto: any) {
+    return this.updateAnimalUseCase.execute(Number(id), dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.animaisService.remove(+id);
+  async remove(@Param('id') id: string) {
+    return this.removeAnimalUseCase.execute(Number(id));
   }
 
   @Post('saida')
-  async registrarSaida(@Body() dto: CreateSaidaAnimalDto) {
-    return this.animaisService.registrarSaidaAnimal(dto);
+  async registrarSaida(@Body() dto: any) {
+    return this.registrarSaidaAnimalUseCase.execute(dto);
   }
 }

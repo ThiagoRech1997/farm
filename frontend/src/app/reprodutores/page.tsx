@@ -59,14 +59,11 @@ export default function ReprodutoresPage() {
     return dias > 180;
   });
 
+  const term = (searchTerm || '').toLowerCase();
   const filteredReprodutores = reprodutores.filter(r => {
-    const term = searchTerm.toLowerCase();
     return (
-      r.Nome.toLowerCase().includes(term) ||
-      r.ID.toString().includes(term) ||
-      r.Matriz_ID.toString().includes(term) ||
-      (r.Ninhada_Descricao && r.Ninhada_Descricao.toLowerCase().includes(term)) ||
-      (r.Data_Nascimento && new Date(r.Data_Nascimento).toLocaleDateString('pt-BR').includes(term))
+      (r.Nome || '').toLowerCase().includes(term) ||
+      (r.Ninhada_Descricao || '').toLowerCase().includes(term)
     );
   });
 

@@ -57,14 +57,14 @@ export default function VacinasPage() {
     return dias > 0 && dias <= 7;
   });
 
+  const term = (searchTerm || '').toLowerCase();
   const filteredVacinas = vacinas.filter(v => {
-    const term = searchTerm.toLowerCase();
     return (
-      v.Nome_Vacina.toLowerCase().includes(term) ||
+      (v.Nome_Vacina || '').toLowerCase().includes(term) ||
       v.Animal_ID.toString().includes(term) ||
       (v.Data_Aplicacao && new Date(v.Data_Aplicacao).toLocaleDateString('pt-BR').includes(term)) ||
       (v.Proxima_Aplicacao && new Date(v.Proxima_Aplicacao).toLocaleDateString('pt-BR').includes(term)) ||
-      (v.Veterinario && v.Veterinario.toLowerCase().includes(term))
+      (v.Veterinario || '').toLowerCase().includes(term)
     );
   });
 

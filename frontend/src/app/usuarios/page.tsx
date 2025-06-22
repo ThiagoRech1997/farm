@@ -36,15 +36,15 @@ export default function UsuariosPage() {
 
   // Cálculos para os resumos
   const total = usuarios.length;
-  const admins = usuarios.filter(u => u.Nivel_Acesso.toLowerCase() === 'admin').length;
-  const operadores = usuarios.filter(u => u.Nivel_Acesso.toLowerCase() === 'operador').length;
+  const admins = usuarios.filter(u => (u.Nivel_Acesso || '').toLowerCase() === 'admin').length;
+  const operadores = usuarios.filter(u => (u.Nivel_Acesso || '').toLowerCase() === 'operador').length;
 
   const filteredUsuarios = usuarios.filter(u => {
-    const term = searchTerm.toLowerCase();
+    const term = (searchTerm || '').toLowerCase();
     return (
-      u.Nome_Usuario.toLowerCase().includes(term) ||
-      u.Email.toLowerCase().includes(term) ||
-      u.Nivel_Acesso.toLowerCase().includes(term)
+      (u.Nome_Usuario || '').toLowerCase().includes(term) ||
+      (u.Email || '').toLowerCase().includes(term) ||
+      (u.Nivel_Acesso || '').toLowerCase().includes(term)
     );
   });
 
@@ -106,7 +106,7 @@ export default function UsuariosPage() {
                         <p className="font-semibold text-lg">{usuario.Nome_Usuario}</p>
                         <p className="text-sm text-gray-600">{usuario.Email}</p>
                       </div>
-                      <StatusBadge status={usuario.Nivel_Acesso.charAt(0).toUpperCase() + usuario.Nivel_Acesso.slice(1).toLowerCase()} />
+                      <StatusBadge status={(usuario.Nivel_Acesso?.charAt(0).toUpperCase() || '') + (usuario.Nivel_Acesso?.slice(1).toLowerCase() || '')} />
                     </div>
                     <p className="text-sm text-gray-500 mt-1">Nível de Acesso: {usuario.Nivel_Acesso}</p>
                   </div>

@@ -58,13 +58,13 @@ export default function NinhadasPage() {
     return diff <= 15;
   });
 
+  const term = (searchTerm || '').toLowerCase();
   const filteredNinhadas = ninhadas.filter(n => {
-    const term = searchTerm.toLowerCase();
     return (
       n.ID.toString().includes(term) ||
       n.Matriz_ID.toString().includes(term) ||
       n.Reprodutor_ID.toString().includes(term) ||
-      (n.Descricao && n.Descricao.toLowerCase().includes(term))
+      (n.Descricao || '').toLowerCase().includes(term)
     );
   });
 

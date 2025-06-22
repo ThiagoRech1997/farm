@@ -41,10 +41,10 @@ export default function PesagensPage() {
     return dias > 30;
   });
 
+  const term = (searchTerm || '').toLowerCase();
   const filteredPesagens = pesagens.filter(p => {
-    const term = searchTerm.toLowerCase();
     return (
-      (p.Animal_Nome && p.Animal_Nome.toLowerCase().includes(term)) ||
+      (p.Animal_Nome || '').toLowerCase().includes(term) ||
       p.Animal_ID.toString().includes(term) ||
       p.Peso.toString().includes(term) ||
       (p.Data_Pesagem && new Date(p.Data_Pesagem).toLocaleDateString('pt-BR').includes(term))

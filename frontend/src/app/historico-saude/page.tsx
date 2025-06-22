@@ -44,14 +44,12 @@ export default function HistoricoSaudePage() {
   }).length;
   const criticos = historico.filter(e => e.Tratamento && e.Tratamento.trim() !== '').length;
 
+  const term = (searchTerm || '').toLowerCase();
   const filteredHistorico = historico.filter(e => {
-    const term = searchTerm.toLowerCase();
     return (
-      e.Animal_ID.toString().includes(term) ||
-      e.Descricao.toLowerCase().includes(term) ||
-      (e.Tratamento && e.Tratamento.toLowerCase().includes(term)) ||
-      (e.Veterinario && e.Veterinario.toLowerCase().includes(term)) ||
-      (e.Data_Evento && new Date(e.Data_Evento).toLocaleDateString('pt-BR').includes(term))
+      (e.Descricao || '').toLowerCase().includes(term) ||
+      (e.Tratamento || '').toLowerCase().includes(term) ||
+      (e.Veterinario || '').toLowerCase().includes(term)
     );
   });
 

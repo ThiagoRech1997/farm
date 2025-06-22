@@ -1,39 +1,68 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { PesagensService } from './pesagens.service';
-import { CreatePesagemDto } from './dto/create-pesagem.dto';
-import { UpdatePesagemDto } from './dto/update-pesagem.dto';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Inject,
+  ParseIntPipe,
+} from '@nestjs/common';
+import { CreatePesagemUseCase } from './application/create-pesagem.usecase';
+import { ListPesagensUseCase } from './application/list-pesagens.usecase';
+import { GetPesagemUseCase } from './application/get-pesagem.usecase';
+import { UpdatePesagemUseCase } from './application/update-pesagem.usecase';
+import { RemovePesagemUseCase } from './application/remove-pesagem.usecase';
+import { ListPesagensComNomesUseCase } from './application/list-pesagens-com-nomes.usecase';
 
 @Controller('pesagens')
 export class PesagensController {
-  constructor(private readonly pesagensService: PesagensService) {}
+  constructor(
+    @Inject(CreatePesagemUseCase)
+    private readonly createUseCase: CreatePesagemUseCase,
+    @Inject(ListPesagensUseCase)
+    private readonly listUseCase: ListPesagensUseCase,
+    @Inject(GetPesagemUseCase)
+    private readonly getUseCase: GetPesagemUseCase,
+    @Inject(UpdatePesagemUseCase)
+    private readonly updateUseCase: UpdatePesagemUseCase,
+    @Inject(RemovePesagemUseCase)
+    private readonly removeUseCase: RemovePesagemUseCase,
+    @Inject(ListPesagensComNomesUseCase)
+    private readonly listComNomesUseCase: ListPesagensComNomesUseCase,
+  ) {}
 
   @Post()
-  create(@Body() createPesagemDto: CreatePesagemDto) {
-    return this.pesagensService.create(createPesagemDto);
+  create(@Body() createDto: any) {
+    return this.createUseCase.execute(createDto);
   }
 
   @Get()
   findAll() {
-    return this.pesagensService.findAll();
+    return this.listUseCase.execute();
   }
 
   @Get('com-nomes')
   findAllWithAnimalNames() {
-    return this.pesagensService.findAllWithAnimalNames();
+    return this.listComNomesUseCase.execute();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.pesagensService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.getUseCase.execute(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePesagemDto: UpdatePesagemDto) {
-    return this.pesagensService.update(+id, updatePesagemDto);
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateDto: any,
+  ) {
+    return this.updateUseCase.execute(id, updateDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.pesagensService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.removeUseCase.execute(id);
   }
 }
