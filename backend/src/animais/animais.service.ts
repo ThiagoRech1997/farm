@@ -96,4 +96,32 @@ export class AnimaisService {
       });
     });
   }
+
+  async registrarSaidaAnimal(dto: any) {
+    return new Promise((resolve, reject) => {
+      this.db.serialize(() => {
+        // 1. Inserir na tabela SaidasAnimais
+        const insert = this.db.prepare(`
+          INSERT INTO SaidasAnimais (Animal_ID, Tipo_Saida, Data_Saida, Observacao, Comprador, Valor, Motivo_Perda)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `);
+        insert.run([
+          dto.Animal_ID,
+          dto.Tipo_Saida,
+          dto.Data_Saida,
+          dto.Observacao || null,
+          dto.Comprador || null,
+          dto.Valor || null,
+          dto.Motivo_Perda || null
+        ], (err) => {
+          if (err) return reject(err);
+          // 2. Marcar animal como inativo
+          this.db.run('UPDATE Animais SET Ativo = 0 WHERE ID = ?', [dto.Animal_ID], (err2) => {
+            if (err2) return reject(err2);
+            resolve({ success: true });
+          });
+        });
+      });
+    });
+  }
 }

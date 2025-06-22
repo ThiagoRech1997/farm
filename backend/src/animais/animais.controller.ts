@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { AnimaisService } from './animais.service';
 import { CreateAnimaiDto } from './dto/create-animai.dto';
 import { UpdateAnimaiDto } from './dto/update-animai.dto';
+import { CreateSaidaAnimalDto } from './dto/create-saida-animal.dto';
 
 @Controller('animais')
 export class AnimaisController {
@@ -30,5 +31,10 @@ export class AnimaisController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.animaisService.remove(+id);
+  }
+
+  @Post('saida')
+  async registrarSaida(@Body() dto: CreateSaidaAnimalDto) {
+    return this.animaisService.registrarSaidaAnimal(dto);
   }
 }

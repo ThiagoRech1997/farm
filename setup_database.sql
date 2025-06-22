@@ -58,3 +58,20 @@ UNION ALL
 SELECT 'Racas' as Tabela, COUNT(*) as Registros FROM Racas
 UNION ALL
 SELECT 'Animais' as Tabela, COUNT(*) as Registros FROM Animais; 
+
+-- 7. Criar tabela de saídas de animais
+CREATE TABLE IF NOT EXISTS SaidasAnimais (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    Animal_ID INTEGER NOT NULL,
+    Tipo_Saida TEXT NOT NULL, -- venda, perda, abate
+    Data_Saida DATE NOT NULL,
+    Observacao TEXT,
+    Comprador TEXT,
+    Valor DECIMAL(10,2),
+    Motivo_Perda TEXT,
+    Criado_Em DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (Animal_ID) REFERENCES Animais(ID)
+);
+
+-- 8. Adicionar campo Ativo na tabela Animais (se não existir)
+ALTER TABLE Animais ADD COLUMN Ativo BOOLEAN DEFAULT 1; 
