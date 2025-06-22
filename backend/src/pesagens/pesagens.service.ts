@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { CreatePesagenDto } from './dto/create-pesagen.dto';
-import { UpdatePesagenDto } from './dto/update-pesagen.dto';
+import { CreatePesagemDto } from './dto/create-pesagem.dto';
+import { UpdatePesagemDto } from './dto/update-pesagem.dto';
 import { DATABASE_CONNECTION } from 'src/database/database.module';
 import { Database } from 'sqlite3';
 
@@ -8,8 +8,8 @@ import { Database } from 'sqlite3';
 export class PesagensService {
   constructor(@Inject(DATABASE_CONNECTION) private readonly db: Database) {}
 
-  create(createPesagenDto: CreatePesagenDto) {
-    const { Animal_ID, Data_Pesagem, Peso } = createPesagenDto;
+  create(createPesagemDto: CreatePesagemDto) {
+    const { Animal_ID, Data_Pesagem, Peso } = createPesagemDto;
     return new Promise((resolve, reject) => {
       this.db.run(
         'INSERT INTO Pesagens (Animal_ID, Data_Pesagem, Peso) VALUES (?, ?, ?)',
@@ -18,7 +18,7 @@ export class PesagensService {
           if (err) {
             return reject(err);
           }
-          resolve({ id: this.lastID, ...createPesagenDto });
+          resolve({ id: this.lastID, ...createPesagemDto });
         },
       );
     });
@@ -68,9 +68,9 @@ export class PesagensService {
     });
   }
 
-  update(id: number, updatePesagenDto: UpdatePesagenDto) {
-    const fields = Object.keys(updatePesagenDto);
-    const values = Object.values(updatePesagenDto);
+  update(id: number, updatePesagemDto: UpdatePesagemDto) {
+    const fields = Object.keys(updatePesagemDto);
+    const values = Object.values(updatePesagemDto);
 
     if (fields.length === 0) {
       return this.findOne(id);

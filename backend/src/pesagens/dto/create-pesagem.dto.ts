@@ -5,7 +5,7 @@ import {
   IsOptional,
 } from 'class-validator';
 
-export class CreatePesagenDto {
+export class CreatePesagemDto {
   @IsNumber()
   @IsNotEmpty()
   Animal_ID: number;

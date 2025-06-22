@@ -122,7 +122,10 @@ export default function Home() {
   };
 
   const animaisMachos = animais.filter(animal => animal.Sexo?.toLowerCase() === 'm' || animal.Sexo?.toLowerCase() === 'macho');
-  const animaisFemeas = animais.filter(animal => animal.Sexo?.toLowerCase() === 'f' || animal.Sexo?.toLowerCase() === 'femea' || animal.Sexo?.toLowerCase() === 'femea');
+  const animaisFemeas = animais.filter(animal => {
+    const sexoSemAcento = (animal.Sexo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return sexoSemAcento === 'f' || sexoSemAcento === 'femea';
+  });
   
   const filteredAnimais = animais.filter(animal => {
     const term = searchTerm.toLowerCase();

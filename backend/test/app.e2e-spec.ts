@@ -22,4 +22,19 @@ describe('AppController (e2e)', () => {
       .expect(200)
       .expect('Hello World!');
   });
+
+  it('/pesagens/com-nomes (GET)', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/pesagens/com-nomes')
+      .expect(200);
+    expect(Array.isArray(response.body)).toBe(true);
+    if (response.body.length > 0) {
+      const pesagem = response.body[0];
+      expect(pesagem).toHaveProperty('ID');
+      expect(pesagem).toHaveProperty('Animal_ID');
+      expect(pesagem).toHaveProperty('Data_Pesagem');
+      expect(pesagem).toHaveProperty('Peso');
+      expect(pesagem).toHaveProperty('Animal_Nome');
+    }
+  });
 });
