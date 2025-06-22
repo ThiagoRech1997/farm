@@ -27,9 +27,30 @@ type Pesagem = {
   Peso: number;
 };
 
+type Ninhada = {
+  ID: number;
+  Matriz_ID: number;
+  Reprodutor_ID: number;
+  Data_Concepcao: string;
+  Data_Nascimento: string;
+  Descricao: string;
+  Perdas: string;
+};
+
+type Vacina = {
+  ID: number;
+  Animal_ID: number;
+  Nome_Vacina: string;
+  Data_Aplicacao: string;
+  Proxima_Aplicacao: string;
+  Veterinario: string;
+};
+
 export default function Home() {
   const [animais, setAnimais] = useState<Animal[]>([]);
   const [pesagens, setPesagens] = useState<Pesagem[]>([]);
+  const [ninhadas, setNinhadas] = useState<Ninhada[]>([]);
+  const [vacinas, setVacinas] = useState<Vacina[]>([]);
   const [activeTab, setActiveTab] = useState('animais');
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -43,9 +64,11 @@ export default function Home() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [animaisRes, pesagensRes] = await Promise.all([
+        const [animaisRes, pesagensRes, ninhadasRes, vacinasRes] = await Promise.all([
           fetch('http://localhost:3000/animais', { cache: 'no-store' }),
           fetch('http://localhost:3000/pesagens/com-nomes', { cache: 'no-store' }),
+          fetch('http://localhost:3000/ninhadas', { cache: 'no-store' }),
+          fetch('http://localhost:3000/vacinas', { cache: 'no-store' }),
         ]);
 
         if (animaisRes.ok) {
@@ -61,6 +84,20 @@ export default function Home() {
           setPesagens(data);
         } else {
           console.error('Erro ao carregar pesagens');
+        }
+
+        if (ninhadasRes.ok) {
+          const data = await ninhadasRes.json();
+          setNinhadas(data);
+        } else {
+          console.error('Erro ao carregar ninhadas');
+        }
+
+        if (vacinasRes.ok) {
+          const data = await vacinasRes.json();
+          setVacinas(data);
+        } else {
+          console.error('Erro ao carregar vacinas');
         }
 
       } catch (err) {
@@ -310,16 +347,39 @@ export default function Home() {
 
           {activeTab === 'ninhadas' && (
             <div className="animate-fadeIn">
-              <h2 className="text-3xl font-bold text-green-800 mb-6">🐣 Controle de Ninhadas</h2>
-              <Link href="/ninhadas">
-                <button className="bg-gradient-to-r from-orange-600 to-orange-700 text-white font-bold py-4 px-8 rounded-xl hover:from-orange-700 hover:to-orange-800 transition-all duration-300 transform hover:-translate-y-1 shadow-lg mb-8 btn-hover">
-                  ➕ Registrar Nova Ninhada
-                </button>
-              </Link>
-              <div className="text-center py-12 text-gray-600">
-                <div className="text-6xl mb-4 animate-float">🐣</div>
-                <p className="text-xl">Funcionalidade de ninhadas em desenvolvimento</p>
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-3xl font-bold text-green-800">🐣 Controle de Ninhadas</h2>
+                <Link href="/ninhadas/novo">
+                  <button className="bg-gradient-to-r from-orange-600 to-orange-700 text-white font-bold py-3 px-6 rounded-xl hover:from-orange-700 hover:to-orange-800 transition-all duration-300 transform hover:-translate-y-1 shadow-lg btn-hover">
+                    ➕ Registrar Nova Ninhada
+                  </button>
+                </Link>
               </div>
+              {loading ? (
+                <SkeletonGrid count={3} />
+              ) : ninhadas.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {ninhadas.map((ninhada) => (
+                    <div key={ninhada.ID} className="glass p-6 rounded-2xl shadow-lg card-glow hover-3d">
+                      <p className="font-semibold text-lg text-green-900">Ninhada ID: {ninhada.ID}</p>
+                      <p className="text-sm text-gray-700">Matriz ID: {ninhada.Matriz_ID}</p>
+                      <p className="text-sm text-gray-700">Reprodutor ID: {ninhada.Reprodutor_ID}</p>
+                      {ninhada.Data_Nascimento && (
+                        <p className="text-sm text-gray-500">
+                          Nascimento: {new Date(ninhada.Data_Nascimento).toLocaleDateString('pt-BR')}
+                        </p>
+                      )}
+                      <p className="text-sm text-gray-500 mt-2">{ninhada.Descricao}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="col-span-full text-center py-12">
+                  <div className="text-6xl mb-4 animate-float">🐣</div>
+                  <p className="text-xl text-gray-600 mb-4">Nenhuma ninhada cadastrada ainda.</p>
+                  <p className="text-gray-500">Clique em "Registrar Nova Ninhada" para começar.</p>
+                </div>
+              )}
             </div>
           )}
 
@@ -360,16 +420,43 @@ export default function Home() {
 
           {activeTab === 'vacinas' && (
             <div className="animate-fadeIn">
-              <h2 className="text-3xl font-bold text-green-800 mb-6">💉 Controle de Vacinas</h2>
-              <Link href="/vacinas">
-                <button className="bg-gradient-to-r from-cyan-600 to-cyan-700 text-white font-bold py-4 px-8 rounded-xl hover:from-cyan-700 hover:to-cyan-800 transition-all duration-300 transform hover:-translate-y-1 shadow-lg mb-8 btn-hover">
-                  ➕ Registrar Vacinação
-                </button>
-              </Link>
-              <div className="text-center py-12 text-gray-600">
-                <div className="text-6xl mb-4 animate-float">💉</div>
-                <p className="text-xl">Acesse a seção de vacinas para gerenciar o calendário vacinal</p>
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-3xl font-bold text-green-800">💉 Controle de Vacinas</h2>
+                <Link href="/vacinas/novo">
+                  <button className="bg-gradient-to-r from-cyan-600 to-cyan-700 text-white font-bold py-3 px-6 rounded-xl hover:from-cyan-700 hover:to-cyan-800 transition-all duration-300 transform hover:-translate-y-1 shadow-lg btn-hover">
+                    ➕ Registrar Nova Vacina
+                  </button>
+                </Link>
               </div>
+              {loading ? (
+                <SkeletonGrid count={3} />
+              ) : vacinas.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {vacinas.map((vacina) => (
+                    <div key={vacina.ID} className="glass p-6 rounded-2xl shadow-lg card-glow hover-3d">
+                      <p className="font-semibold text-lg text-green-900">{vacina.Nome_Vacina}</p>
+                      <p className="text-sm text-gray-700">Animal ID: {vacina.Animal_ID}</p>
+                      {vacina.Data_Aplicacao && (
+                        <p className="text-sm text-gray-500">
+                          Aplicada em: {new Date(vacina.Data_Aplicacao).toLocaleDateString('pt-BR')}
+                        </p>
+                      )}
+                      {vacina.Proxima_Aplicacao && (
+                        <p className="text-sm text-gray-500">
+                          Próxima dose: {new Date(vacina.Proxima_Aplicacao).toLocaleDateString('pt-BR')}
+                        </p>
+                      )}
+                      <p className="text-sm text-gray-500 mt-2">Vet: {vacina.Veterinario}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="col-span-full text-center py-12">
+                  <div className="text-6xl mb-4 animate-float">💉</div>
+                  <p className="text-xl text-gray-600 mb-4">Nenhuma vacina registrada ainda.</p>
+                  <p className="text-gray-500">Clique em "Registrar Nova Vacina" para começar.</p>
+                </div>
+              )}
             </div>
           )}
         </div>
