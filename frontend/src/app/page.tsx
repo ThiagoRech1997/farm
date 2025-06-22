@@ -19,8 +19,17 @@ type Animal = {
   Raca_Nome?: string;
 };
 
+type Pesagem = {
+  ID: number;
+  Animal_ID: number;
+  Animal_Nome?: string;
+  Data_Pesagem: string;
+  Peso: number;
+};
+
 export default function Home() {
   const [animais, setAnimais] = useState<Animal[]>([]);
+  const [pesagens, setPesagens] = useState<Pesagem[]>([]);
   const [activeTab, setActiveTab] = useState('animais');
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,7 +40,39 @@ export default function Home() {
   const [animalToDelete, setAnimalToDelete] = useState<Animal | null>(null);
 
   useEffect(() => {
-    fetchAnimais();
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [animaisRes, pesagensRes] = await Promise.all([
+          fetch('http://localhost:3000/animais', { cache: 'no-store' }),
+          fetch('http://localhost:3000/pesagens/com-nomes', { cache: 'no-store' }),
+        ]);
+
+        if (animaisRes.ok) {
+          const data = await animaisRes.json();
+          setAnimais(data);
+          success('Animais carregados com sucesso!');
+        } else {
+          error('Erro ao carregar animais');
+        }
+
+        if (pesagensRes.ok) {
+          const data = await pesagensRes.json();
+          setPesagens(data);
+        } else {
+          console.error('Erro ao carregar pesagens');
+        }
+
+      } catch (err) {
+        console.error('Erro ao buscar dados:', err);
+        error('Erro ao carregar dados');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+    
     if (window.innerWidth < 768) {
       setShowParticles(false);
     }
@@ -281,16 +322,36 @@ export default function Home() {
 
           {activeTab === 'pesagem' && (
             <div className="animate-fadeIn">
-              <h2 className="text-3xl font-bold text-green-800 mb-6">⚖️ Controle de Pesagem</h2>
-              <Link href="/pesagens">
-                <button className="bg-gradient-to-r from-lime-600 to-lime-700 text-white font-bold py-4 px-8 rounded-xl hover:from-lime-700 hover:to-lime-800 transition-all duration-300 transform hover:-translate-y-1 shadow-lg mb-8 btn-hover">
-                  ➕ Registrar Pesagem
-                </button>
-              </Link>
-              <div className="text-center py-12 text-gray-600">
-                <div className="text-6xl mb-4 animate-float">⚖️</div>
-                <p className="text-xl">Acesse a seção de pesagens para gerenciar os pesos dos animais</p>
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-3xl font-bold text-green-800">⚖️ Registros de Pesagem</h2>
+                <Link href="/pesagens/novo">
+                  <button className="bg-gradient-to-r from-lime-600 to-lime-700 text-white font-bold py-3 px-6 rounded-xl hover:from-lime-700 hover:to-lime-800 transition-all duration-300 transform hover:-translate-y-1 shadow-lg btn-hover">
+                    ➕ Registrar Pesagem
+                  </button>
+                </Link>
               </div>
+
+              {loading ? (
+                 <SkeletonGrid count={3} />
+              ) : pesagens.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {pesagens.map((pesagem) => (
+                    <div key={pesagem.ID} className="glass p-6 rounded-2xl shadow-lg text-center card-glow hover-3d">
+                       <p className="text-lg font-bold text-green-900">{pesagem.Animal_Nome || `Animal ID: ${pesagem.Animal_ID}`}</p>
+                       <p className="font-black text-4xl text-purple-800 my-2 count-up">{pesagem.Peso.toFixed(2)} kg</p>
+                       <p className="text-sm text-gray-700">
+                         {new Date(pesagem.Data_Pesagem).toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                       </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="col-span-full text-center py-12">
+                  <div className="text-6xl mb-4 animate-float">⚖️</div>
+                  <p className="text-xl text-gray-600 mb-4">Nenhuma pesagem registrada ainda.</p>
+                  <p className="text-gray-500">Clique em "Registrar Pesagem" para começar.</p>
+                </div>
+              )}
             </div>
           )}
 

@@ -17,6 +17,11 @@ export class PesagensController {
     return this.pesagensService.findAll();
   }
 
+  @Get('com-nomes')
+  findAllWithAnimalNames() {
+    return this.pesagensService.findAllWithAnimalNames();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.pesagensService.findOne(+id);
