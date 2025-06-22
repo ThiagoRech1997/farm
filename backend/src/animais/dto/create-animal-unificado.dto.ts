@@ -22,6 +22,17 @@ export class CreateAnimalUnificadoDto {
   @IsOptional()
   Observacoes?: string;
 
+  // Espécie e Raça
+  @IsNumber()
+  @IsOptional()
+  @IsPositive()
+  Especie_ID?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @IsPositive()
+  Raca_ID?: number;
+
   // Peso Inicial
   @IsNumber()
   @IsPositive()

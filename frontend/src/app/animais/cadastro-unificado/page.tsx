@@ -9,6 +9,22 @@ interface Animal {
   Nome: string;
   Sexo: string;
   Data_Nascimento: string;
+  Especie_Nome?: string;
+  Raca_Nome?: string;
+}
+
+interface Especie {
+  ID: number;
+  Nome: string;
+  Nome_Cientifico?: string;
+  Descricao?: string;
+  Tipo_Animal?: string;
+}
+
+interface Raca {
+  ID: number;
+  Nome: string;
+  Descricao?: string;
 }
 
 interface ToastMessage {
@@ -23,33 +39,52 @@ export default function CadastroUnificadoPage() {
   const [sexo, setSexo] = useState('');
   const [dataNascimento, setDataNascimento] = useState('');
   const [observacoes, setObservacoes] = useState('');
+  const [especieId, setEspecieId] = useState('');
+  const [racaId, setRacaId] = useState('');
   const [pesoInicial, setPesoInicial] = useState('');
   const [dataPesagem, setDataPesagem] = useState('');
   const [animalPaiId, setAnimalPaiId] = useState('');
   const [animalMaeId, setAnimalMaeId] = useState('');
   const [animais, setAnimais] = useState<Animal[]>([]);
+  const [especies, setEspecies] = useState<Especie[]>([]);
+  const [racas, setRacas] = useState<Raca[]>([]);
   const [loading, setLoading] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
-  const [loadingAnimais, setLoadingAnimais] = useState(true);
+  const [loadingData, setLoadingData] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    const fetchAnimais = async () => {
+    const fetchData = async () => {
       try {
-        const res = await fetch('http://localhost:3000/animais-unificado/pais');
-        if (res.ok) {
-          const data = await res.json();
-          setAnimais(data);
+        const [animaisRes, especiesRes, racasRes] = await Promise.all([
+          fetch('http://localhost:3000/animais-unificado/pais'),
+          fetch('http://localhost:3000/especies'),
+          fetch('http://localhost:3000/racas')
+        ]);
+
+        if (animaisRes.ok) {
+          const animaisData = await animaisRes.json();
+          setAnimais(animaisData);
+        }
+
+        if (especiesRes.ok) {
+          const especiesData = await especiesRes.json();
+          setEspecies(especiesData);
+        }
+
+        if (racasRes.ok) {
+          const racasData = await racasRes.json();
+          setRacas(racasData);
         }
       } catch (error) {
-        console.error('Erro ao carregar animais:', error);
-        addToast('Erro ao carregar lista de animais', 'error');
+        console.error('Erro ao carregar dados:', error);
+        addToast('Erro ao carregar dados iniciais', 'error');
       } finally {
-        setLoadingAnimais(false);
+        setLoadingData(false);
       }
     };
 
-    fetchAnimais();
+    fetchData();
   }, []);
 
   const addToast = (message: string, type: 'success' | 'error' | 'warning' | 'info') => {
@@ -71,6 +106,8 @@ export default function CadastroUnificadoPage() {
       Sexo: sexo,
       Data_Nascimento: dataNascimento,
       Observacoes: observacoes,
+      Especie_ID: especieId ? parseInt(especieId) : undefined,
+      Raca_ID: racaId ? parseInt(racaId) : undefined,
       PesoInicial: parseFloat(pesoInicial),
       DataPesagem: dataPesagem || new Date().toISOString().split('T')[0],
       Animal_Pai_ID: animalPaiId ? parseInt(animalPaiId) : undefined,
@@ -99,6 +136,8 @@ export default function CadastroUnificadoPage() {
       setSexo('');
       setDataNascimento('');
       setObservacoes('');
+      setEspecieId('');
+      setRacaId('');
       setPesoInicial('');
       setDataPesagem('');
       setAnimalPaiId('');
@@ -189,6 +228,46 @@ export default function CadastroUnificadoPage() {
                   />
                 </div>
 
+                <div>
+                  <label htmlFor="especie" className="block text-gray-700 font-bold mb-3 text-lg">Espécie</label>
+                  <select
+                    id="especie"
+                    value={especieId}
+                    onChange={(e) => setEspecieId(e.target.value)}
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl text-lg focus:border-green-600 focus:outline-none transition-all duration-300"
+                    disabled={loadingData}
+                  >
+                    <option value="">
+                      {loadingData ? 'Carregando...' : 'Selecione a espécie...'}
+                    </option>
+                    {especies.map((especie) => (
+                      <option key={especie.ID} value={especie.ID}>
+                        {especie.Nome} {especie.Nome_Cientifico && `(${especie.Nome_Cientifico})`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="raca" className="block text-gray-700 font-bold mb-3 text-lg">Raça</label>
+                  <select
+                    id="raca"
+                    value={racaId}
+                    onChange={(e) => setRacaId(e.target.value)}
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl text-lg focus:border-green-600 focus:outline-none transition-all duration-300"
+                    disabled={loadingData}
+                  >
+                    <option value="">
+                      {loadingData ? 'Carregando...' : 'Selecione a raça...'}
+                    </option>
+                    {racas.map((raca) => (
+                      <option key={raca.ID} value={raca.ID}>
+                        {raca.Nome}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="md:col-span-2">
                   <label htmlFor="observacoes" className="block text-gray-700 font-bold mb-3 text-lg">Observacoes</label>
                   <textarea
@@ -248,14 +327,14 @@ export default function CadastroUnificadoPage() {
                     value={animalPaiId}
                     onChange={(e) => setAnimalPaiId(e.target.value)}
                     className="w-full p-4 border-2 border-gray-200 rounded-xl text-lg focus:border-purple-600 focus:outline-none transition-all duration-300"
-                    disabled={loadingAnimais}
+                    disabled={loadingData}
                   >
                     <option value="">
-                      {loadingAnimais ? 'Carregando...' : 'Selecione o pai...'}
+                      {loadingData ? 'Carregando...' : 'Selecione o pai...'}
                     </option>
                     {animaisMachos.map((animal) => (
                       <option key={animal.ID} value={animal.ID}>
-                        {animal.Nome} ({animal.Data_Nascimento})
+                        {animal.Nome} {animal.Especie_Nome && `(${animal.Especie_Nome})`} {animal.Data_Nascimento && `- ${animal.Data_Nascimento}`}
                       </option>
                     ))}
                   </select>
@@ -268,14 +347,14 @@ export default function CadastroUnificadoPage() {
                     value={animalMaeId}
                     onChange={(e) => setAnimalMaeId(e.target.value)}
                     className="w-full p-4 border-2 border-gray-200 rounded-xl text-lg focus:border-purple-600 focus:outline-none transition-all duration-300"
-                    disabled={loadingAnimais}
+                    disabled={loadingData}
                   >
                     <option value="">
-                      {loadingAnimais ? 'Carregando...' : 'Selecione a mae...'}
+                      {loadingData ? 'Carregando...' : 'Selecione a mae...'}
                     </option>
                     {animaisFemeas.map((animal) => (
                       <option key={animal.ID} value={animal.ID}>
-                        {animal.Nome} ({animal.Data_Nascimento})
+                        {animal.Nome} {animal.Especie_Nome && `(${animal.Especie_Nome})`} {animal.Data_Nascimento && `- ${animal.Data_Nascimento}`}
                       </option>
                     ))}
                   </select>

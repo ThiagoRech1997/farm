@@ -1,10 +1,25 @@
+CREATE TABLE Especies (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    Nome TEXT NOT NULL,
+    Nome_Cientifico TEXT,
+    Descricao TEXT,
+    Tipo_Animal TEXT,
+    Expectativa_Vida INTEGER,
+    Peso_Adulto_Min DECIMAL(5,2),
+    Peso_Adulto_Max DECIMAL(5,2)
+);
+
 CREATE TABLE Animais (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
     Nome TEXT NOT NULL,
     Cor TEXT,
     Sexo TEXT,
     Data_Nascimento DATE,
-    Observacoes TEXT
+    Observacoes TEXT,
+    Especie_ID INTEGER,
+    Raca_ID INTEGER,
+    FOREIGN KEY (Especie_ID) REFERENCES Especies(ID),
+    FOREIGN KEY (Raca_ID) REFERENCES Racas(ID)
 );
 
 CREATE TABLE Reprodutores (

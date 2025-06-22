@@ -16,6 +16,8 @@ export class AnimaisUnificadoService {
       Sexo,
       Data_Nascimento,
       Observacoes,
+      Especie_ID,
+      Raca_ID,
       PesoInicial,
       DataPesagem,
       Animal_Pai_ID,
@@ -31,10 +33,10 @@ export class AnimaisUnificadoService {
 
         // 1. Cria o registro na tabela Animais
         const insertAnimal = this.db.prepare(
-          'INSERT INTO Animais (Nome, Cor, Sexo, Data_Nascimento, Observacoes) VALUES (?, ?, ?, ?, ?)'
+          'INSERT INTO Animais (Nome, Cor, Sexo, Data_Nascimento, Observacoes, Especie_ID, Raca_ID) VALUES (?, ?, ?, ?, ?, ?, ?)'
         );
         
-        insertAnimal.run([Nome, Cor, Sexo, Data_Nascimento, Observacoes], (err) => {
+        insertAnimal.run([Nome, Cor, Sexo, Data_Nascimento, Observacoes, Especie_ID, Raca_ID], (err) => {
           if (err) {
             this.db.run('ROLLBACK');
             return reject(new BadRequestException('Erro ao criar animal: ' + err.message));
@@ -116,67 +118,49 @@ export class AnimaisUnificadoService {
   // Método para buscar animais para seleção como pais
   async findAnimaisParaPais() {
     return new Promise((resolve, reject) => {
-      this.db.all(
-        'SELECT ID, Nome, Sexo, Data_Nascimento FROM Animais ORDER BY Nome',
-        (err, rows) => {
-          if (err) {
-            return reject(err);
-          }
-          resolve(rows);
+      this.db.all(`
+        SELECT 
+          a.ID,
+          a.Nome,
+          a.Sexo,
+          a.Data_Nascimento,
+          e.Nome as Especie_Nome,
+          r.Nome as Raca_Nome
+        FROM Animais a
+        LEFT JOIN Especies e ON a.Especie_ID = e.ID
+        LEFT JOIN Racas r ON a.Raca_ID = r.ID
+        WHERE a.Sexo IN ('M', 'F', 'Macho', 'Femea')
+        ORDER BY a.Nome
+      `, (err, rows) => {
+        if (err) {
+          return reject(err);
         }
-      );
+        resolve(rows);
+      });
     });
   }
 
   // Método para buscar um animal com todas as suas informações relacionadas
   async findAnimalCompleto(id: number) {
     return new Promise((resolve, reject) => {
-      this.db.get(
-        `SELECT 
+      this.db.get(`
+        SELECT 
           a.*,
-          p.Peso as PesoAtual,
-          p.Data_Pesagem as UltimaPesagem
+          e.Nome as Especie_Nome,
+          e.Nome_Cientifico as Especie_Cientifico,
+          e.Descricao as Especie_Descricao,
+          r.Nome as Raca_Nome,
+          r.Descricao as Raca_Descricao
         FROM Animais a
-        LEFT JOIN (
-          SELECT Animal_ID, Peso, Data_Pesagem
-          FROM Pesagens 
-          WHERE ID = (
-            SELECT MAX(ID) FROM Pesagens WHERE Animal_ID = a.ID
-          )
-        ) p ON a.ID = p.Animal_ID
-        WHERE a.ID = ?`,
-        [id],
-        (err, animal) => {
-          if (err) {
-            return reject(err);
-          }
-          if (!animal) {
-            return reject(new BadRequestException('Animal não encontrado'));
-          }
-
-          // Busca os relacionamentos
-          this.db.all(
-            `SELECT 
-              r.*,
-              pai.Nome as NomePai,
-              mae.Nome as NomeMae
-            FROM Relacionamentos r
-            LEFT JOIN Animais pai ON r.Animal_Pai_ID = pai.ID
-            LEFT JOIN Animais mae ON r.Animal_Mae_ID = mae.ID
-            WHERE r.Filhote_ID = ?`,
-            [id],
-            (err, relacionamentos) => {
-              if (err) {
-                return reject(err);
-              }
-              resolve({
-                ...animal,
-                relacionamentos
-              });
-            }
-          );
+        LEFT JOIN Especies e ON a.Especie_ID = e.ID
+        LEFT JOIN Racas r ON a.Raca_ID = r.ID
+        WHERE a.ID = ?
+      `, [id], (err, row) => {
+        if (err) {
+          return reject(err);
         }
-      );
+        resolve(row);
+      });
     });
   }
 } 

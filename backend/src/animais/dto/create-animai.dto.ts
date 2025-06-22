@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsDateString } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsDateString, IsNumber, IsPositive } from 'class-validator';
 
 export class CreateAnimaiDto {
   @IsString()
@@ -20,4 +20,14 @@ export class CreateAnimaiDto {
   @IsString()
   @IsOptional()
   Observacoes?: string;
+
+  @IsNumber()
+  @IsOptional()
+  @IsPositive()
+  Especie_ID?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @IsPositive()
+  Raca_ID?: number;
 }

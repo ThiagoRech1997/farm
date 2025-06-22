@@ -13,6 +13,8 @@ type Animal = {
   Sexo: string;
   Data_Nascimento: string;
   Observacoes: string;
+  Especie_Nome?: string;
+  Raca_Nome?: string;
 };
 
 interface ToastMessage {
@@ -69,7 +71,9 @@ export default function Home() {
   
   const filteredAnimais = animais.filter(animal =>
     animal.Nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    animal.Cor?.toLowerCase().includes(searchTerm.toLowerCase())
+    animal.Cor?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    animal.Especie_Nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    animal.Raca_Nome?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -170,7 +174,7 @@ export default function Home() {
                   <span className="search-icon text-xl">🔍</span>
                   <input
                     type="text"
-                    placeholder="Buscar animal por nome ou cor..."
+                    placeholder="Buscar animal por nome, cor, espécie ou raça..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full p-4 pl-12 border-2 border-gray-200 rounded-2xl text-lg focus:border-green-600 focus:outline-none transition-all duration-300"
@@ -203,6 +207,16 @@ export default function Home() {
                         <span className="bg-white bg-opacity-80 px-3 py-2 rounded-lg text-sm font-medium">
                           <strong>ID:</strong> #{animal.ID}
                         </span>
+                        {animal.Especie_Nome && (
+                          <span className="bg-white bg-opacity-80 px-3 py-2 rounded-lg text-sm font-medium">
+                            <strong>Espécie:</strong> {animal.Especie_Nome}
+                          </span>
+                        )}
+                        {animal.Raca_Nome && (
+                          <span className="bg-white bg-opacity-80 px-3 py-2 rounded-lg text-sm font-medium">
+                            <strong>Raça:</strong> {animal.Raca_Nome}
+                          </span>
+                        )}
                       </div>
                       <div className="flex gap-2">
                         <button 

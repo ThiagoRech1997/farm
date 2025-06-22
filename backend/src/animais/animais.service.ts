@@ -11,11 +11,11 @@ export class AnimaisService {
   ) {}
 
   create(createAnimaiDto: CreateAnimaiDto) {
-    const { Nome, Cor, Sexo, Data_Nascimento, Observacoes } = createAnimaiDto;
+    const { Nome, Cor, Sexo, Data_Nascimento, Observacoes, Especie_ID, Raca_ID } = createAnimaiDto;
     return new Promise((resolve, reject) => {
       this.db.run(
-        'INSERT INTO Animais (Nome, Cor, Sexo, Data_Nascimento, Observacoes) VALUES (?, ?, ?, ?, ?)',
-        [Nome, Cor, Sexo, Data_Nascimento, Observacoes],
+        'INSERT INTO Animais (Nome, Cor, Sexo, Data_Nascimento, Observacoes, Especie_ID, Raca_ID) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [Nome, Cor, Sexo, Data_Nascimento, Observacoes, Especie_ID, Raca_ID],
         function (err) {
           if (err) {
             return reject(err);
@@ -28,7 +28,17 @@ export class AnimaisService {
 
   findAll() {
     return new Promise((resolve, reject) => {
-      this.db.all('SELECT * FROM Animais', (err, rows) => {
+      this.db.all(`
+        SELECT 
+          a.*,
+          e.Nome as Especie_Nome,
+          e.Nome_Cientifico as Especie_Cientifico,
+          r.Nome as Raca_Nome
+        FROM Animais a
+        LEFT JOIN Especies e ON a.Especie_ID = e.ID
+        LEFT JOIN Racas r ON a.Raca_ID = r.ID
+        ORDER BY a.Nome
+      `, (err, rows) => {
         if (err) {
           return reject(err);
         }
@@ -39,7 +49,19 @@ export class AnimaisService {
 
   findOne(id: number) {
     return new Promise((resolve, reject) => {
-      this.db.get('SELECT * FROM Animais WHERE ID = ?', [id], (err, row) => {
+      this.db.get(`
+        SELECT 
+          a.*,
+          e.Nome as Especie_Nome,
+          e.Nome_Cientifico as Especie_Cientifico,
+          e.Descricao as Especie_Descricao,
+          r.Nome as Raca_Nome,
+          r.Descricao as Raca_Descricao
+        FROM Animais a
+        LEFT JOIN Especies e ON a.Especie_ID = e.ID
+        LEFT JOIN Racas r ON a.Raca_ID = r.ID
+        WHERE a.ID = ?
+      `, [id], (err, row) => {
         if (err) {
           return reject(err);
         }
@@ -49,24 +71,16 @@ export class AnimaisService {
   }
 
   update(id: number, updateAnimaiDto: UpdateAnimaiDto) {
-    const fields = Object.keys(updateAnimaiDto);
-    const values = Object.values(updateAnimaiDto);
-    
-    if (fields.length === 0) {
-      return this.findOne(id);
-    }
-
-    const setClause = fields.map((field) => `${field} = ?`).join(', ');
-
+    const { Nome, Cor, Sexo, Data_Nascimento, Observacoes, Especie_ID, Raca_ID } = updateAnimaiDto;
     return new Promise((resolve, reject) => {
       this.db.run(
-        `UPDATE Animais SET ${setClause} WHERE ID = ?`,
-        [...values, id],
-        (err) => {
+        'UPDATE Animais SET Nome = ?, Cor = ?, Sexo = ?, Data_Nascimento = ?, Observacoes = ?, Especie_ID = ?, Raca_ID = ? WHERE ID = ?',
+        [Nome, Cor, Sexo, Data_Nascimento, Observacoes, Especie_ID, Raca_ID, id],
+        function (err) {
           if (err) {
             return reject(err);
           }
-          resolve(this.findOne(id));
+          resolve({ id, ...updateAnimaiDto });
         },
       );
     });
@@ -78,7 +92,7 @@ export class AnimaisService {
         if (err) {
           return reject(err);
         }
-        resolve({ deleted: this.changes > 0, id });
+        resolve({ deletedRows: this.changes });
       });
     });
   }
