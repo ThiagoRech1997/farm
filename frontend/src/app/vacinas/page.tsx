@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ResumoVacinaCard from '../../components/ResumoVacinaCard';
 import AlertCard from '../../components/AlertCard';
+import StatusBadge from '../../components/StatusBadge';
 
 type Vacina = {
   ID: number;
@@ -134,23 +135,34 @@ export default function VacinasPage() {
               {loading ? (
                 <p>Carregando...</p>
               ) : filteredVacinas.length > 0 ? (
-                filteredVacinas.map((vacina) => (
-                  <div key={vacina.ID} className="p-4 border rounded-lg shadow-sm">
-                    <p className="font-semibold text-lg">{vacina.Nome_Vacina}</p>
-                    <p className="text-sm text-gray-600">Animal ID: {vacina.Animal_ID}</p>
-                    {vacina.Data_Aplicacao && (
-                      <p className="text-sm text-gray-500">
-                        Aplicada em: {new Date(vacina.Data_Aplicacao).toLocaleDateString('pt-BR')}
-                      </p>
-                    )}
-                    {vacina.Proxima_Aplicacao && (
-                      <p className="text-sm text-gray-500">
-                        Próxima dose: {new Date(vacina.Proxima_Aplicacao).toLocaleDateString('pt-BR')}
-                      </p>
-                    )}
-                    <p className="text-sm text-gray-500 mt-2">Vet: {vacina.Veterinario}</p>
-                  </div>
-                ))
+                filteredVacinas.map((vacina) => {
+                  let status = 'Ok';
+                  if (vacina.Proxima_Aplicacao) {
+                    const dias = (new Date(vacina.Proxima_Aplicacao).getTime() - new Date().getTime()) / (1000*60*60*24);
+                    if (new Date(vacina.Proxima_Aplicacao) < new Date()) status = 'Atrasado';
+                    else if (dias >= 0 && dias <= 7) status = 'Pendente';
+                  }
+                  return (
+                    <div key={vacina.ID} className="p-4 border rounded-lg shadow-sm flex flex-col gap-2">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-semibold text-lg">{vacina.Nome_Vacina}</p>
+                          <p className="text-sm text-gray-600">Animal ID: {vacina.Animal_ID}</p>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          <StatusBadge status={status} />
+                        </div>
+                      </div>
+                      {vacina.Data_Aplicacao && (
+                        <p className="text-sm text-gray-500">Aplicada em: {new Date(vacina.Data_Aplicacao).toLocaleDateString('pt-BR')}</p>
+                      )}
+                      {vacina.Proxima_Aplicacao && (
+                        <p className="text-sm text-gray-500">Próxima dose: {new Date(vacina.Proxima_Aplicacao).toLocaleDateString('pt-BR')}</p>
+                      )}
+                      <p className="text-sm text-gray-500 mt-2">Vet: {vacina.Veterinario}</p>
+                    </div>
+                  );
+                })
               ) : (
                 <p>Nenhuma vacina registrada.</p>
               )}

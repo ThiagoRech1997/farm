@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
+import { useToast } from '../../../hooks/useToast';
 
 export default function NovaVacinaPage() {
   const [animalId, setAnimalId] = useState('');
@@ -10,10 +11,12 @@ export default function NovaVacinaPage() {
   const [proximaAplicacao, setProximaAplicacao] = useState('');
   const [veterinario, setVeterinario] = useState('');
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const { success, error } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    setLoading(true);
     const novaVacina = {
       Animal_ID: parseInt(animalId, 10),
       Nome_Vacina: nomeVacina,
@@ -21,7 +24,6 @@ export default function NovaVacinaPage() {
       Proxima_Aplicacao: proximaAplicacao,
       Veterinario: veterinario,
     };
-
     try {
       const res = await fetch('http://localhost:3000/vacinas', {
         method: 'POST',
@@ -30,15 +32,17 @@ export default function NovaVacinaPage() {
         },
         body: JSON.stringify(novaVacina),
       });
-
       if (!res.ok) {
         throw new Error('Falha ao registrar vacina');
       }
-
+      success('Vacina registrada com sucesso!');
       router.push('/vacinas');
       router.refresh();
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      error('Erro ao registrar vacina');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -100,8 +104,10 @@ export default function NovaVacinaPage() {
         </div>
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-200"
+          className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-200 btn-hover flex items-center justify-center gap-2"
+          disabled={loading}
         >
+          {loading && <span className="loading-spinner mr-2"></span>}
           Registrar Vacina
         </button>
       </form>

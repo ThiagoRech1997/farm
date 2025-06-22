@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
+import { useToast } from '../../../hooks/useToast';
 
 export default function NovoUsuarioPage() {
   const [nomeUsuario, setNomeUsuario] = useState('');
@@ -9,17 +10,18 @@ export default function NovoUsuarioPage() {
   const [senha, setSenha] = useState('');
   const [nivelAcesso, setNivelAcesso] = useState('');
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const { success, error } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    setLoading(true);
     const novoUsuario = {
       Nome_Usuario: nomeUsuario,
       Email: email,
       Senha: senha,
       Nivel_Acesso: nivelAcesso,
     };
-
     try {
       const res = await fetch('http://localhost:3000/usuarios', {
         method: 'POST',
@@ -28,15 +30,17 @@ export default function NovoUsuarioPage() {
         },
         body: JSON.stringify(novoUsuario),
       });
-
       if (!res.ok) {
         throw new Error('Falha ao cadastrar usuário');
       }
-
+      success('Usuário cadastrado com sucesso!');
       router.push('/usuarios');
       router.refresh();
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      error('Erro ao cadastrar usuário');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -91,8 +95,10 @@ export default function NovoUsuarioPage() {
         </div>
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-200"
+          className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-200 btn-hover flex items-center justify-center gap-2"
+          disabled={loading}
         >
+          {loading && <span className="loading-spinner mr-2"></span>}
           Cadastrar Usuário
         </button>
       </form>

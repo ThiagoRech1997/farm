@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ResumoHistoricoCard from '../../components/ResumoHistoricoCard';
+import StatusBadge from '../../components/StatusBadge';
 
 type HistoricoSaude = {
   ID: number;
@@ -106,15 +107,16 @@ export default function HistoricoSaudePage() {
                 <p>Carregando...</p>
               ) : filteredHistorico.length > 0 ? (
                 filteredHistorico.map((evento) => (
-                  <div key={evento.ID} className="p-4 border rounded-lg shadow-sm">
+                  <div key={evento.ID} className="p-4 border rounded-lg shadow-sm flex flex-col gap-2">
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="font-semibold text-lg">{evento.Descricao}</p>
                         <p className="text-sm text-gray-600">Animal ID: {evento.Animal_ID}</p>
                       </div>
-                      <p className="text-sm text-gray-500">
-                        {new Date(evento.Data_Evento).toLocaleDateString('pt-BR')}
-                      </p>
+                      <div className="flex flex-col items-end gap-1">
+                        <StatusBadge status={evento.Tratamento && evento.Tratamento.trim() !== '' ? 'Crítico' : 'Ok'} />
+                        <p className="text-sm text-gray-500">{new Date(evento.Data_Evento).toLocaleDateString('pt-BR')}</p>
+                      </div>
                     </div>
                     <p className="text-sm text-gray-700 mt-2">Tratamento: {evento.Tratamento}</p>
                     <p className="text-sm text-gray-500 mt-1">Vet: {evento.Veterinario}</p>

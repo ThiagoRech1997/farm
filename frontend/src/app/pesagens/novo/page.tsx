@@ -2,22 +2,24 @@
 
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
+import { useToast } from '../../../hooks/useToast';
 
 export default function NovaPesagemPage() {
   const [animalId, setAnimalId] = useState('');
   const [dataPesagem, setDataPesagem] = useState('');
   const [peso, setPeso] = useState('');
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const { success, error } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    setLoading(true);
     const novaPesagem = {
       Animal_ID: parseInt(animalId, 10),
       Data_Pesagem: dataPesagem,
       Peso: parseFloat(peso),
     };
-
     try {
       const res = await fetch('http://localhost:3000/pesagens', {
         method: 'POST',
@@ -26,15 +28,17 @@ export default function NovaPesagemPage() {
         },
         body: JSON.stringify(novaPesagem),
       });
-
       if (!res.ok) {
         throw new Error('Falha ao registrar pesagem');
       }
-
+      success('Pesagem registrada com sucesso!');
       router.push('/pesagens');
       router.refresh();
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      error('Erro ao registrar pesagem');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -77,8 +81,10 @@ export default function NovaPesagemPage() {
         </div>
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-200"
+          className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-200 btn-hover flex items-center justify-center gap-2"
+          disabled={loading}
         >
+          {loading && <span className="loading-spinner mr-2"></span>}
           Registrar Pesagem
         </button>
       </form>

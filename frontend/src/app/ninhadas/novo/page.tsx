@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
+import { useToast } from '../../../hooks/useToast';
 
 export default function NovaNinhadaPage() {
   const [matrizId, setMatrizId] = useState('');
@@ -11,10 +12,12 @@ export default function NovaNinhadaPage() {
   const [descricao, setDescricao] = useState('');
   const [perdas, setPerdas] = useState('');
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const { success, error } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    setLoading(true);
     const novaNinhada = {
       Matriz_ID: matrizId ? parseInt(matrizId, 10) : undefined,
       Reprodutor_ID: reprodutorId ? parseInt(reprodutorId, 10) : undefined,
@@ -23,7 +26,6 @@ export default function NovaNinhadaPage() {
       Descricao: descricao,
       Perdas: perdas,
     };
-
     try {
       const res = await fetch('http://localhost:3000/ninhadas', {
         method: 'POST',
@@ -32,15 +34,17 @@ export default function NovaNinhadaPage() {
         },
         body: JSON.stringify(novaNinhada),
       });
-
       if (!res.ok) {
         throw new Error('Falha ao cadastrar ninhada');
       }
-
+      success('Ninhada cadastrada com sucesso!');
       router.push('/ninhadas');
       router.refresh();
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      error('Erro ao cadastrar ninhada');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -110,8 +114,10 @@ export default function NovaNinhadaPage() {
         </div>
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-200"
+          className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-200 btn-hover flex items-center justify-center gap-2"
+          disabled={loading}
         >
+          {loading && <span className="loading-spinner mr-2"></span>}
           Cadastrar Ninhada
         </button>
       </form>

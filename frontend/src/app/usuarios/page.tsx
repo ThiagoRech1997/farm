@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ResumoUsuarioCard from '../../components/ResumoUsuarioCard';
+import StatusBadge from '../../components/StatusBadge';
 
 type Usuario = {
   id: number;
@@ -99,9 +100,14 @@ export default function UsuariosPage() {
                 <p>Carregando...</p>
               ) : filteredUsuarios.length > 0 ? (
                 filteredUsuarios.map((usuario) => (
-                  <div key={usuario.id} className="p-4 border rounded-lg shadow-sm">
-                    <p className="font-semibold text-lg">{usuario.Nome_Usuario}</p>
-                    <p className="text-sm text-gray-600">{usuario.Email}</p>
+                  <div key={usuario.id} className="p-4 border rounded-lg shadow-sm flex flex-col gap-2">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-semibold text-lg">{usuario.Nome_Usuario}</p>
+                        <p className="text-sm text-gray-600">{usuario.Email}</p>
+                      </div>
+                      <StatusBadge status={usuario.Nivel_Acesso.charAt(0).toUpperCase() + usuario.Nivel_Acesso.slice(1).toLowerCase()} />
+                    </div>
                     <p className="text-sm text-gray-500 mt-1">Nível de Acesso: {usuario.Nivel_Acesso}</p>
                   </div>
                 ))

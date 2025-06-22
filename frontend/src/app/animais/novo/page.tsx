@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
+import { useToast } from '../../../hooks/useToast';
 
 export default function NovoAnimalPage() {
   const [nome, setNome] = useState('');
@@ -9,11 +10,13 @@ export default function NovoAnimalPage() {
   const [sexo, setSexo] = useState('');
   const [dataNascimento, setDataNascimento] = useState('');
   const [observacoes, setObservacoes] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { success, error } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    setLoading(true);
     const novoAnimal = {
       Nome: nome,
       Cor: cor,
@@ -21,7 +24,6 @@ export default function NovoAnimalPage() {
       Data_Nascimento: dataNascimento,
       Observacoes: observacoes,
     };
-
     try {
       const res = await fetch('http://localhost:3000/animais', {
         method: 'POST',
@@ -30,17 +32,17 @@ export default function NovoAnimalPage() {
         },
         body: JSON.stringify(novoAnimal),
       });
-
       if (!res.ok) {
         throw new Error('Falha ao cadastrar animal');
       }
-
-      // Redireciona para a página inicial para ver a lista atualizada
+      success('Animal cadastrado com sucesso!');
       router.push('/');
-      router.refresh(); // Garante que os dados da página inicial sejam recarregados
-    } catch (error) {
-      console.error(error);
-      // Aqui você poderia adicionar um estado para mostrar uma mensagem de erro na tela
+      router.refresh();
+    } catch (err) {
+      error('Erro ao cadastrar animal');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -101,8 +103,10 @@ export default function NovoAnimalPage() {
         </div>
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-200"
+          className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-200 btn-hover flex items-center justify-center gap-2"
+          disabled={loading}
         >
+          {loading && <span className="loading-spinner mr-2"></span>}
           Cadastrar Animal
         </button>
       </form>
