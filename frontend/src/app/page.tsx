@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Toast from '../components/Toast';
 import Particles from '../components/Particles';
 import { SkeletonGrid, StatsSkeleton } from '../components/LoadingSkeleton';
+import Modal from '../components/Modal';
 import { useToast } from '../hooks/useToast';
 
 type Animal = {
@@ -25,10 +26,12 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showParticles, setShowParticles] = useState(true);
   const { toasts, removeToast, success, error, info, warning } = useToast();
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [animalToDelete, setAnimalToDelete] = useState<Animal | null>(null);
 
   useEffect(() => {
     fetchAnimais();
-    // Desabilitar partículas em dispositivos móveis para performance
     if (window.innerWidth < 768) {
       setShowParticles(false);
     }
@@ -52,24 +55,50 @@ export default function Home() {
     }
   };
 
+  const getSexoLabel = (sexo: string) => {
+    if (!sexo) return 'Não Definido';
+    const s = sexo.toLowerCase();
+    if (s === 'm' || s === 'macho') return 'Macho';
+    if (s === 'f' || s === 'femea') return 'Fêmea';
+    return 'Não Definido';
+  };
+
+  const handleDeleteClick = (animal: Animal) => {
+    setAnimalToDelete(animal);
+    setIsModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (!animalToDelete) return;
+
+    console.log('Excluindo animal:', animalToDelete.ID);
+    
+    setAnimais(prev => prev.filter(a => a.ID !== animalToDelete.ID));
+
+    setIsModalOpen(false);
+    setAnimalToDelete(null);
+    warning(`Animal "${animalToDelete.Nome}" excluído com sucesso (simulação).`);
+  };
+
   const animaisMachos = animais.filter(animal => animal.Sexo?.toLowerCase() === 'm' || animal.Sexo?.toLowerCase() === 'macho');
   const animaisFemeas = animais.filter(animal => animal.Sexo?.toLowerCase() === 'f' || animal.Sexo?.toLowerCase() === 'femea' || animal.Sexo?.toLowerCase() === 'femea');
   
-  const filteredAnimais = animais.filter(animal =>
-    animal.Nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    animal.Cor?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    animal.Especie_Nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    animal.Raca_Nome?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredAnimais = animais.filter(animal => {
+    const term = searchTerm.toLowerCase();
+    return (
+      animal.Nome.toLowerCase().includes(term) ||
+      animal.Cor?.toLowerCase().includes(term) ||
+      animal.Especie_Nome?.toLowerCase().includes(term) ||
+      animal.Raca_Nome?.toLowerCase().includes(term) ||
+      animal.ID.toString().includes(term)
+    );
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 p-4 relative overflow-hidden">
-      {/* Partículas Flutuantes */}
       {showParticles && <Particles />}
       
-      {/* Container Principal com Glassmorphism */}
       <div className="max-w-7xl mx-auto glass rounded-3xl shadow-2xl overflow-hidden relative">
-        {/* Header com Animação Bounce */}
         <div className="relative bg-gradient-to-r from-green-800 to-green-600 text-white p-8 text-center">
           <div className="absolute left-8 top-1/2 transform -translate-y-1/2 text-6xl animate-bounce-gentle">
             🐄
@@ -78,7 +107,6 @@ export default function Home() {
           <p className="text-xl opacity-90">Sistema completo para controle de animais, ninhadas, pesagem e vacinas</p>
         </div>
 
-        {/* Navigation Tabs com Micro-interações */}
         <div className="flex bg-gray-50 border-b-4 border-gray-200">
           {[
             { id: 'animais', icon: '🐄', label: 'Animais' },
@@ -101,12 +129,9 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Content */}
         <div className="p-8">
-          {/* Tab Animais */}
           {activeTab === 'animais' && (
             <div className="animate-fadeIn">
-              {/* Stats Grid com Count-up Animation */}
               {loading ? (
                 <StatsSkeleton />
               ) : (
@@ -130,7 +155,6 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Action Buttons com Shimmer Effect */}
               <div className="flex flex-wrap gap-4 mb-8">
                 <Link href="/animais/cadastro-unificado">
                   <button className="bg-gradient-to-r from-green-600 to-green-700 text-white font-bold py-4 px-8 rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 transform hover:-translate-y-1 shadow-lg btn-hover animate-shimmer">
@@ -138,69 +162,76 @@ export default function Home() {
                   </button>
                 </Link>
                 <Link href="/animais/novo">
-                  <button className="bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold py-4 px-8 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 transform hover:-translate-y-1 shadow-lg btn-hover">
+                  <button className="bg-white/20 text-white border-2 border-white/50 font-bold py-4 px-8 rounded-xl hover:bg-white/30 transition-all duration-300 transform hover:-translate-y-1 shadow-lg btn-hover">
                     ➕ Cadastrar Animal Simples
                   </button>
                 </Link>
                 <Link href="/pesagens">
-                  <button className="bg-gradient-to-r from-lime-600 to-lime-700 text-white font-bold py-4 px-8 rounded-xl hover:from-lime-700 hover:to-lime-800 transition-all duration-300 transform hover:-translate-y-1 shadow-lg btn-hover">
+                  <button className="bg-white/20 text-white border-2 border-white/50 font-bold py-4 px-8 rounded-xl hover:bg-white/30 transition-all duration-300 transform hover:-translate-y-1 shadow-lg btn-hover">
                     ⚖️ Gerenciar Pesagens
                   </button>
                 </Link>
                 <Link href="/vacinas">
-                  <button className="bg-gradient-to-r from-cyan-600 to-cyan-700 text-white font-bold py-4 px-8 rounded-xl hover:from-cyan-700 hover:to-cyan-800 transition-all duration-300 transform hover:-translate-y-1 shadow-lg btn-hover">
+                  <button className="bg-white/20 text-white border-2 border-white/50 font-bold py-4 px-8 rounded-xl hover:bg-white/30 transition-all duration-300 transform hover:-translate-y-1 shadow-lg btn-hover">
                     💉 Gerenciar Vacinas
                   </button>
                 </Link>
               </div>
 
-              {/* Search Box com Ícone Integrado */}
               <div className="mb-8 search-container">
                 <div className="relative">
                   <span className="search-icon text-xl">🔍</span>
                   <input
                     type="text"
-                    placeholder="Buscar animal por nome, cor, espécie ou raça..."
+                    placeholder="Buscar por nome, cor, espécie, raça ou ID..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full p-4 pl-12 border-2 border-gray-200 rounded-2xl text-lg focus:border-green-600 focus:outline-none transition-all duration-300"
+                    className="w-full p-4 pl-12 pr-12 border-2 border-gray-200 rounded-2xl text-lg focus:border-green-600 focus:outline-none transition-all duration-300"
                   />
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-800 text-2xl font-bold"
+                      aria-label="Limpar busca"
+                    >
+                      &times;
+                    </button>
+                  )}
                 </div>
               </div>
 
-              {/* Animals Grid com Loading Skeleton */}
               {loading ? (
                 <SkeletonGrid count={6} />
               ) : filteredAnimais.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {filteredAnimais.map((animal, index) => (
                     <div 
                       key={animal.ID} 
-                      className="glass rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 card-glow hover-3d"
+                      className="glass rounded-2xl p-7 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 card-glow hover-3d"
                       style={{ animationDelay: `${index * 0.1}s` }}
                     >
-                      <h3 className="text-xl font-bold text-green-800 mb-4">{animal.Nome}</h3>
-                      <div className="grid grid-cols-2 gap-3 mb-4 text-gray-700">
-                        <span className="bg-white bg-opacity-80 px-3 py-2 rounded-lg text-sm font-medium">
-                          <strong className="text-gray-900">Cor:</strong> {animal.Cor || 'N/A'}
+                      <h3 className="text-2xl font-bold text-green-900 mb-4">{animal.Nome}</h3>
+                      <div className="grid grid-cols-2 gap-4 mb-5 text-gray-800">
+                        <span className="bg-white/70 px-3 py-2 rounded-lg text-sm font-medium">
+                          <strong className="text-gray-900 block">Cor:</strong> {animal.Cor || 'N/A'}
                         </span>
-                        <span className="bg-white bg-opacity-80 px-3 py-2 rounded-lg text-sm font-medium">
-                          <strong className="text-gray-900">Sexo:</strong> {animal.Sexo || 'N/A'}
+                        <span className="bg-white/70 px-3 py-2 rounded-lg text-sm font-medium">
+                          <strong className="text-gray-900 block">Sexo:</strong> {getSexoLabel(animal.Sexo)}
                         </span>
-                        <span className="bg-white bg-opacity-80 px-3 py-2 rounded-lg text-sm font-medium">
-                          <strong className="text-gray-900">Nascimento:</strong> {animal.Data_Nascimento ? new Date(animal.Data_Nascimento).toLocaleDateString('pt-BR') : 'N/A'}
+                        <span className="bg-white/70 px-3 py-2 rounded-lg text-sm font-medium">
+                          <strong className="text-gray-900 block">Nascimento:</strong> {animal.Data_Nascimento ? new Date(animal.Data_Nascimento).toLocaleDateString('pt-BR') : 'N/A'}
                         </span>
-                        <span className="bg-white bg-opacity-80 px-3 py-2 rounded-lg text-sm font-medium">
-                          <strong className="text-gray-900">ID:</strong> #{animal.ID}
+                        <span className="bg-white/70 px-3 py-2 rounded-lg text-sm font-medium">
+                          <strong className="text-gray-900 block">ID:</strong> #{animal.ID}
                         </span>
                         {animal.Especie_Nome && (
-                          <span className="bg-white bg-opacity-80 px-3 py-2 rounded-lg text-sm font-medium">
-                            <strong className="text-gray-900">Espécie:</strong> {animal.Especie_Nome}
+                          <span className="bg-white/70 px-3 py-2 rounded-lg text-sm font-medium col-span-1">
+                            <strong className="text-gray-900 block">Espécie:</strong> {animal.Especie_Nome}
                           </span>
                         )}
                         {animal.Raca_Nome && (
-                          <span className="bg-white bg-opacity-80 px-3 py-2 rounded-lg text-sm font-medium">
-                            <strong className="text-gray-900">Raça:</strong> {animal.Raca_Nome}
+                          <span className="bg-white/70 px-3 py-2 rounded-lg text-sm font-medium col-span-1">
+                            <strong className="text-gray-900 block">Raça:</strong> {animal.Raca_Nome}
                           </span>
                         )}
                       </div>
@@ -213,7 +244,7 @@ export default function Home() {
                         </button>
                         <button 
                           className="flex-1 bg-red-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600 transition duration-200 text-sm btn-hover"
-                          onClick={() => warning('Funcionalidade de exclusão em desenvolvimento')}
+                          onClick={() => handleDeleteClick(animal)}
                         >
                           Excluir
                         </button>
@@ -233,7 +264,6 @@ export default function Home() {
             </div>
           )}
 
-          {/* Tab Ninhadas */}
           {activeTab === 'ninhadas' && (
             <div className="animate-fadeIn">
               <h2 className="text-3xl font-bold text-green-800 mb-6">🐣 Controle de Ninhadas</h2>
@@ -249,7 +279,6 @@ export default function Home() {
             </div>
           )}
 
-          {/* Tab Pesagem */}
           {activeTab === 'pesagem' && (
             <div className="animate-fadeIn">
               <h2 className="text-3xl font-bold text-green-800 mb-6">⚖️ Controle de Pesagem</h2>
@@ -265,7 +294,6 @@ export default function Home() {
             </div>
           )}
 
-          {/* Tab Vacinas */}
           {activeTab === 'vacinas' && (
             <div className="animate-fadeIn">
               <h2 className="text-3xl font-bold text-green-800 mb-6">💉 Controle de Vacinas</h2>
@@ -283,7 +311,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Toast Notifications */}
       {toasts.map((toast) => (
         <Toast
           key={toast.id}
@@ -293,6 +320,16 @@ export default function Home() {
           onClose={() => removeToast(toast.id)}
         />
       ))}
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Confirmar Exclusão"
+        description={`Tem certeza que deseja excluir o animal "${animalToDelete?.Nome}"? Esta ação não pode ser desfeita.`}
+        onConfirm={confirmDelete}
+        confirmText="Sim, Excluir"
+        cancelText="Cancelar"
+      />
     </div>
   );
 } 

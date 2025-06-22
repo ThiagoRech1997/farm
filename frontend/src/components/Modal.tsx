@@ -2,23 +2,31 @@
 
 import React, { useEffect } from 'react';
 
-interface ModalProps {
+export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  children: React.ReactNode;
+  description?: string;
+  onConfirm?: () => void;
+  confirmText?: string;
+  cancelText?: string;
+  children?: React.ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   showCloseButton?: boolean;
 }
 
-export default function Modal({ 
+const Modal: React.FC<ModalProps> = ({ 
   isOpen, 
   onClose, 
   title, 
+  description, 
+  onConfirm, 
+  confirmText = 'Confirmar',
+  cancelText = 'Cancelar',
   children, 
   size = 'md',
   showCloseButton = true 
-}: ModalProps) {
+}) => {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -50,113 +58,75 @@ export default function Modal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      
-      {/* Modal */}
-      <div className={`relative w-full ${getSizeClasses()} animate-fadeIn`}>
-        <div className="glass rounded-2xl shadow-2xl overflow-hidden">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-green-800 to-green-600 text-white p-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-shadow">{title}</h2>
-              {showCloseButton && (
-                <button
-                  onClick={onClose}
-                  className="text-white hover:text-gray-200 transition-colors text-2xl font-bold p-2 hover:bg-white hover:bg-opacity-20 rounded-full"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-          </div>
-          
-          {/* Content */}
-          <div className="p-6">
-            {children}
-          </div>
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+      onClick={onClose}
+    >
+      <div
+        className={`bg-white rounded-2xl shadow-2xl w-full transition-transform duration-300 ${getSizeClasses()} ${isOpen ? "scale-100 opacity-100" : "scale-95 opacity-0"}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Modal Header */}
+        <div className="flex justify-between items-center p-5 border-b border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
+          {showCloseButton && (
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          )}
         </div>
+
+        {/* Modal Body */}
+        <div className="p-6">
+          {description && <p className="text-gray-600 mb-6">{description}</p>}
+          {children}
+        </div>
+
+        {/* Modal Footer */}
+        {onConfirm && (
+          <div className="flex justify-end items-center gap-4 p-5 bg-gray-50 border-t border-gray-200 rounded-b-2xl">
+            <button
+              onClick={onClose}
+              className="bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              {cancelText}
+            </button>
+            <button
+              onClick={onConfirm}
+              className="bg-red-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-red-700 transition-colors"
+            >
+              {confirmText}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
-}
+};
+
+export default Modal;
 
 // Componente de confirmação
-export function ConfirmModal({ 
-  isOpen, 
-  onClose, 
-  onConfirm, 
-  title, 
-  message, 
-  confirmText = 'Confirmar',
-  cancelText = 'Cancelar',
-  type = 'warning'
+export const ConfirmationModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
 }: {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
   title: string;
   message: string;
-  confirmText?: string;
-  cancelText?: string;
-  type?: 'warning' | 'danger' | 'info';
-}) {
-  const getTypeStyles = () => {
-    switch (type) {
-      case 'danger':
-        return 'from-red-600 to-red-700';
-      case 'warning':
-        return 'from-yellow-600 to-yellow-700';
-      case 'info':
-        return 'from-blue-600 to-blue-700';
-      default:
-        return 'from-yellow-600 to-yellow-700';
-    }
-  };
-
-  const getConfirmButtonStyles = () => {
-    switch (type) {
-      case 'danger':
-        return 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800';
-      case 'warning':
-        return 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800';
-      case 'info':
-        return 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800';
-      default:
-        return 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800';
-    }
-  };
-
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
-      <div className="text-center">
-        <div className="text-6xl mb-4 animate-bounce-gentle">
-          {type === 'danger' ? '⚠️' : type === 'warning' ? '⚠️' : 'ℹ️'}
-        </div>
-        <p className="text-gray-700 text-lg mb-6">{message}</p>
-        
-        <div className="flex gap-4 justify-center">
-          <button
-            onClick={onClose}
-            className="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white font-bold rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-300 transform hover:-translate-y-1 shadow-lg btn-hover"
-          >
-            {cancelText}
-          </button>
-          <button
-            onClick={() => {
-              onConfirm();
-              onClose();
-            }}
-            className={`px-6 py-3 text-white font-bold rounded-xl transition-all duration-300 transform hover:-translate-y-1 shadow-lg btn-hover ${getConfirmButtonStyles()}`}
-          >
-            {confirmText}
-          </button>
-        </div>
-      </div>
-    </Modal>
-  );
-} 
+}) => (
+  <Modal 
+    isOpen={isOpen} 
+    onClose={onClose} 
+    title={title} 
+    size="sm"
+    onConfirm={onConfirm}
+    description={message}
+  >
+  </Modal>
+); 
